@@ -1,0 +1,199 @@
+# Default config for sway
+# Read `man 5 sway` for a complete reference.
+
+### Variables
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+set $term kitty
+set $menu fuzzel
+
+### 1. Environment & Services
+# Consolidated D-Bus environment sync
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway
+
+# Launch EasyEffects in background service mode on Sway startup
+#exec com.github.wwmm.easyeffects --gapplication-service
+
+# Start essential services
+exec mako
+exec_always --no-startup-id nm-applet --indicator
+#exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+#exec gnome-keyring-daemon --start --components=secrets,ssh,pkcs11
+
+# 1. Start Polkit Authentication Agent
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+
+# 2. Start GNOME Keyring & import environment into DBus/systemd
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+exec_always gnome-keyring-daemon --start --components=secrets,ssh,pkcs11
+
+#eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
+#export SSH_AUTH_SOCK
+
+# Startup Script
+exec "/usr/bin/bash ~/.config/sway/scripts/sway-max2.sh > ~/sway-script-error.log 2>&1"
+
+# Power menu and profiles
+bindsym $mod+backslash exec ~/.config/sway/scripts/powermenu.sh
+bindsym $mod+p exec ~/.config/sway/scripts/fuzzel-power-profiles.sh
+bindsym XF86AudioMicMute exec "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+
+### 2. Output configuration
+output * bg "~/.config/sway/backgrounds/wallpaper1.png"  fill
+
+output eDP-1 pos 0 0 res 1920x1080@60Hz scale 1.25
+output DP-2 pos 1536 0 res 1440x900@59.887Hz scale 1.0
+
+workspace 1 output eDP-1
+workspace 2 output DP-2
+workspace 3 output HDMI-A-1
+
+assign [app_id="discord"] workspace 2
+
+### 3. Input configuration
+input "type:touchpad" {
+    dwt enabled
+    tap enabled
+    natural_scroll enabled
+    middle_emulation enabled
+}
+
+### 4. Key bindings
+# Basics
+bindsym $mod+Return exec $menu
+bindsym $mod+w kill
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit sway?' -B 'Yes' 'swaymsg exit'
+#bindsym $mod+l exec hyprlock
+bindsym $mod+l exec swaylock --screenshots --clock --indicator --indicator-radius 100 --indicator-thickness 7 --effect-blur 7x5 --effect-vignette 0.5:0.5 --ring-color 88c0d0 --key-hl-color 5e81ac --line-color 00000000 --inside-color 2e344088 --separator-color 00000000 --grace 2 --fade-in 0.2
+
+# Screenshots
+bindsym Print exec grim -g "$(slurp)" - | wl-copy
+
+# Navigation
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+
+# Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+bindsym $mod+7 workspace number 7
+bindsym $mod+8 workspace number 8
+bindsym $mod+9 workspace number 9
+bindsym $mod+0 workspace number 10
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+bindsym $mod+Shift+7 move container to workspace number 7
+bindsym $mod+Shift+8 move container to workspace number 8
+bindsym $mod+Shift+9 move container to workspace number 9
+bindsym $mod+Shift+0 move container to workspace number 10
+
+# Layout & Window Management
+bindsym $mod+b splith
+bindsym $mod+v splitv
+bindsym $mod+s layout stacking
+bindsym $mod+Shift+w layout tabbed
+bindsym $mod+e layout toggle split
+bindsym $mod+f fullscreen
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+space focus mode_toggle
+bindsym $mod+a focus parent
+floating_modifier $mod normal
+
+# Resize Mode
+mode "resize" {
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+exec_always xfce4-panel --disable-wm-check
+for_window [class="Xfce4-panel"] floating enable, border none, sticky enable
+
+# Multimedia Keys
+bindsym --locked XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym --locked XF86AudioPlay exec playerctl play-pause
+bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
+bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+
+# Scratchpad
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+
+gaps inner 7
+gaps outer 0
+#default_border pixel 2
+default_floating_border pixel 10
+smart_borders on
+
+# Window border colors (Border, Background, Text, Indicator, Child Border)
+client.focused          #88c0d0 #2e3440 #eceff4 #88c0d0 #88c0d0
+client.unfocused        #4c566a #2e3440 #d8dee9 #4c566a #4c566a
+client.focused_inactive #4c566a #2e3440 #d8dee9 #4c566a #4c566a
+
+# Cleanup
+include /etc/sway/config.d/*
+
+### SwayFX Visual Enhancements
+# Enable rounded corners on all tiled & floating windows
+corner_radius 10
+
+# Dynamic background blur behind transparent windows
+blur enable
+blur_xray off
+blur_passes 3
+blur_radius 5
+
+# Soft drop shadows
+shadows enable
+shadow_blur_radius 15
+shadow_color #000000AA
+
+# Dim inactive windows to emphasize current focus
+default_dim_inactive 0.15
+#dim_inactive_colors #000000FF
+
+# Apply blur and rounded corners to LayerShell elements (Mako notifications, menus)
+layer_effects "mako" blur enable; corner_radius 8; shadows enable
+
+### Useful Workflow Tweaks
+# Terminal quick launch
+bindsym $mod+t exec $term
+
+# Fast scratchpad toggles for terminal & system monitoring
+for_window [app_id="scratch_term"] floating enable, resize set 900px 600px, move position center, sticky enable
+for_window [app_id="scratch_btop"] floating enable, resize set 1000px 700px, move position center, sticky enable
+
+bindsym $mod+Shift+Return exec swaymsg [app_id="scratch_term"] scratchpad show || exec $term --class scratch_term
+bindsym $mod+Shift+t exec swaymsg [app_id="scratch_btop"] scratchpad show || exec $term --class scratch_btop -e btop
+
+# Quick workspace cycle (tab between last used workspaces)
+bindsym $mod+Tab workspace back_and_forth
