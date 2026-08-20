@@ -33,7 +33,6 @@ It is focused on being fast, simple, and lightweight. No special distracting eff
 └── README.md
 ```
 
----
 
 ## Key Dependencies
 
@@ -46,7 +45,6 @@ Ensure the following packages are installed on your system before deploying:
 | **Services & Auth** | `polkit-gnome`, `gnome-keyring`, `dbus` |
 | **Fonts** | `ttf-jetbrains-mono` |
 
----
 
 ## Installation
 
@@ -69,7 +67,6 @@ chmod +x install.sh
 ./install.sh
 ```
 
----
 
 ## Keybindings Reference
 
